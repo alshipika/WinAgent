@@ -12,9 +12,10 @@ namespace Network
         static void Main(string[] args)
         {
 
+            var services = ServiceHelper.GetService32();
             //ConnectionsHelper.GetData();
 
-            ProcessesHelper.Do();
+            var serviceCPU = ProcessesHelper.GetExpenses(services);
             //System.Diagnostics.Process.PerformanceCounter
             //var a1 = ConnectionsHelper.GetData();
             /* ConsumptionPerCore consumptionPerCore = new ConsumptionPerCore();
@@ -27,7 +28,7 @@ namespace Network
 
 
            // NetworkPerNIC.Do();
-           // var a = ConnectionsPerProcess.GetAllTcpConnections();
+            var a = ConnectionsPerProcess.GetAllTcpConnections(services);
 
            // var d = System.Net.NetworkInformation.
            //  var b2 = a[0].();

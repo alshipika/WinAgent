@@ -7,20 +7,72 @@ using System.Threading.Tasks;
 
 namespace Network
 {
+    class ProcessCPUMemoryInfo
+    {
+        public int ProcessId { get; set; }
+
+        public int WorkingSet { get; set; }
+
+        public TimeSpan TotalProcessorTime { get; set; }
+
+        public override string ToString()
+        {
+            return ProcessId + " " + WorkingSet + " " + TotalProcessorTime.ToString();
+        }
+    }
+
     class ProcessesHelper
     {
-        public static void Do()
+        public static List<ServiceCPUMemoryInfo> GetExpenses(ServiceInfo[] services)
         {
+            List<ProcessCPUMemoryInfo> result = new List<ProcessCPUMemoryInfo>();
+
             System.Diagnostics.Process[] currentProcesses = System.Diagnostics.Process.GetProcesses();
             foreach (System.Diagnostics.Process process in currentProcesses)
             {
                 try
                 {
+                    result.Add(
+                        new ProcessCPUMemoryInfo()
+                        {
+                            ProcessId = process.Id,
+                            WorkingSet = process.WorkingSet,
+                            TotalProcessorTime = process.TotalProcessorTime
+                        }
+                    );
                     Console.WriteLine(process.ProcessName + " " + process.WorkingSet + " " + process.TotalProcessorTime);
                 }
                 catch
                 { }
             }
+
+            return Calculate(result, services);
+        }
+
+        private static List<ServiceCPUMemoryInfo> Calculate(List<ProcessCPUMemoryInfo> processCPUMemoryInfos, ServiceInfo[] services)
+        {
+            List<ServiceCPUMemoryInfo> result = new List<ServiceCPUMemoryInfo>();
+
+            //var a = tcpTableRecords.Where(x => services.ToList().Exists(y => y.ProcessId == x.ProcessId && y.ProcessId != 0)).ToList();
+
+            var groupedResult = processCPUMemoryInfos.Where(x => x.ProcessId != 0);
+
+            foreach (var processItem in groupedResult)
+            {
+                List<ServiceInfo> servicesOfProcess = services.Where(x => processItem.ProcessId == x.ProcessId).ToList();
+
+                foreach (var serviceInfo in servicesOfProcess)
+                {
+                    result.Add(new ServiceCPUMemoryInfo()
+                    {
+                        ServiceInfo = serviceInfo,
+                        TotalProcessorTime = processItem.TotalProcessorTime,
+                        WorkingSet = processItem.WorkingSet
+                    });
+                }
+            }
+
+            return result;
         }
 
         public static void Main1()

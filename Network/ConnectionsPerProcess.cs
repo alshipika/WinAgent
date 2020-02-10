@@ -36,7 +36,7 @@ namespace Network
             bool bOrder, int ulAf, UdpTableClass tableClass, uint reserved = 0);
 
 
-        public static List<TcpProcessRecord> GetAllTcpConnections()
+        public static List<ConnectionsPerServiceInfo> GetAllTcpConnections(ServiceInfo[] services)
         {
             int bufferSize = 0;
             List<TcpProcessRecord> tcpTableRecords = new List<TcpProcessRecord>();
@@ -60,7 +60,7 @@ namespace Network
                 // Non-zero value represent the function 'GetExtendedTcpTable' failed, 
                 // hence empty list is returned to the caller function. 
                 if (result != 0)
-                    return new List<TcpProcessRecord>();
+                    return new List<ConnectionsPerServiceInfo>();
 
                 // Marshals data from an unmanaged block of memory to a newly allocated 
                 // managed object 'tcpRecordsTable' of type 'MIB_TCPTABLE_OWNER_PID' 
@@ -100,9 +100,38 @@ namespace Network
             {
                 Marshal.FreeHGlobal(tcpTableRecordsPtr);
             }
-            return tcpTableRecords != null ? tcpTableRecords.Distinct()
+
+            tcpTableRecords = tcpTableRecords != null ? tcpTableRecords.Distinct()
                 .ToList<TcpProcessRecord>() : new List<TcpProcessRecord>();
+
+            return Calculate(tcpTableRecords, services);
         }
+
+        private static List<ConnectionsPerServiceInfo> Calculate(List<TcpProcessRecord> tcpTableRecords, ServiceInfo[] services)
+        {
+            List<ConnectionsPerServiceInfo> result = new List<ConnectionsPerServiceInfo>();
+
+            //var a = tcpTableRecords.Where(x => services.ToList().Exists(y => y.ProcessId == x.ProcessId && y.ProcessId != 0)).ToList();
+
+            var groupedResult = tcpTableRecords.Where(x => x.ProcessId != 0).GroupBy(x => x.ProcessId);
+
+            foreach (var processItem in groupedResult)
+            {
+                List<ServiceInfo> servicesOfProcess = services.Where(x => processItem.Key == x.ProcessId).ToList();
+
+                foreach (var serviceInfo in servicesOfProcess)
+                {
+                    result.Add(new ConnectionsPerServiceInfo()
+                    {
+                        ServiceInfo = serviceInfo,
+                        Count = processItem.Count()
+                    });
+                }
+            }
+
+            return result;
+        }
+
         private static List<UdpProcessRecord> GetAllUdpConnections()
         {
             int bufferSize = 0;
@@ -279,6 +308,11 @@ namespace Network
             {
                 ProcessName = Process.GetProcessById(ProcessId).ProcessName;
             }
+        }
+
+        public override string ToString()
+        {
+            return ProcessId + " " + ProcessName;
         }
     }
 

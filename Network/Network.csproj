@@ -35,6 +35,9 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Data.Entity" />
+    <Reference Include="System.Management" />
+    <Reference Include="System.ServiceProcess" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -45,11 +48,15 @@
   <ItemGroup>
     <Compile Include="ConnectionsHelper.cs" />
     <Compile Include="ConnectionsPerProcess.cs" />
+    <Compile Include="ConnectionsPerServiceInfo.cs" />
     <Compile Include="ConsumptionPerCore.cs" />
     <Compile Include="NetworkPerNIC.cs" />
     <Compile Include="ProcessesHelper.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ServiceCPUMemoryInfo.cs" />
+    <Compile Include="ServiceHelper.cs" />
+    <Compile Include="ServiceInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
