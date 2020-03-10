@@ -2,11 +2,22 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace Network
 {
+    struct IO_COUNTERS
+    {
+        public ulong ReadOperationCount;
+        public ulong WriteOperationCount;
+        public ulong OtherOperationCount;
+        public ulong ReadTransferCount;
+        public ulong WriteTransferCount;
+        public ulong OtherTransferCount;
+    }
+
     class ProcessCPUMemoryInfo
     {
         public int ProcessId { get; set; }
@@ -15,14 +26,22 @@ namespace Network
 
         public TimeSpan TotalProcessorTime { get; set; }
 
+        public IO_COUNTERS DiskCounters { get; set; }
+
         public override string ToString()
         {
             return ProcessId + " " + WorkingSet + " " + TotalProcessorTime.ToString();
         }
     }
 
+
+
     class ProcessesHelper
     {
+
+        [DllImport(@"kernel32.dll", SetLastError = true)]
+        static extern bool GetProcessIoCounters(IntPtr hProcess, out IO_COUNTERS counters);
+
         public static List<ServiceCPUMemoryInfo> GetExpenses(ServiceInfo[] services)
         {
             List<ProcessCPUMemoryInfo> result = new List<ProcessCPUMemoryInfo>();
@@ -32,18 +51,30 @@ namespace Network
             {
                 try
                 {
+
+                    IO_COUNTERS counters;
+                    if (GetProcessIoCounters(process.Handle, out  counters))
+                    {
+                        Console.WriteLine(counters.ReadOperationCount);
+                    }
+
                     result.Add(
                         new ProcessCPUMemoryInfo()
                         {
                             ProcessId = process.Id,
                             WorkingSet = process.WorkingSet,
-                            TotalProcessorTime = process.TotalProcessorTime
+                            TotalProcessorTime = process.TotalProcessorTime,
+                            DiskCounters = counters
                         }
                     );
-                    Console.WriteLine(process.ProcessName + " " + process.WorkingSet + " " + process.TotalProcessorTime);
+                    if (process.Id == 12788)
+                    Console.WriteLine(process.ProcessName + " " + process.WorkingSet + " " + process.TotalProcessorTime
+                         + " " + counters.ReadTransferCount
+                          + " " + counters.WriteTransferCount);
                 }
-                catch
-                { }
+                catch (Exception ex)
+                {
+                }
             }
 
             return Calculate(result, services);
@@ -67,7 +98,8 @@ namespace Network
                     {
                         ServiceInfo = serviceInfo,
                         TotalProcessorTime = processItem.TotalProcessorTime,
-                        WorkingSet = processItem.WorkingSet
+                        WorkingSet = processItem.WorkingSet,
+                        DiskCounters = processItem.DiskCounters
                     });
                 }
             }

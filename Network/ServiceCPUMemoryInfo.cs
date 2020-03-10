@@ -14,6 +14,8 @@ namespace Network
 
         public TimeSpan TotalProcessorTime { get; set; }
 
+        public IO_COUNTERS DiskCounters { get; set; }
+
         public override string ToString()
         {
             return ServiceInfo.ProcessId + " " + ServiceInfo.Name + " " + WorkingSet + " " + TotalProcessorTime.ToString();
